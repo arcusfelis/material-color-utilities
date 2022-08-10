@@ -143,9 +143,7 @@ export class Hct {
   }
 
   private setInternalState(argb: number) {
-    const cam = Cam16.fromInt(argb);
-    this.internalHue = cam.hue;
-    this.internalChroma = cam.chroma;
+    Cam16.fromIntSetHueChroma(argb, this);
     this.internalTone = utils.lstarFromArgb(argb);
     this.argb = argb;
   }

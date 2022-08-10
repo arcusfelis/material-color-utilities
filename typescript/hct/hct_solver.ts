@@ -431,6 +431,9 @@ export class HctSolver {
     return mathUtils.signum(adapted) * Math.pow(base, 1.0 / 0.42);
   }
 
+  private static arr1 = [0,0,0];
+  private static arr2 = [0,0,0];
+
   /**
    * Finds a color with the given hue, chroma, and Y.
    *
@@ -479,10 +482,12 @@ export class HctSolver {
       const rCScaled = HctSolver.inverseChromaticAdaptation(rA);
       const gCScaled = HctSolver.inverseChromaticAdaptation(gA);
       const bCScaled = HctSolver.inverseChromaticAdaptation(bA);
-      const linrgb = mathUtils.matrixMultiply(
-          [rCScaled, gCScaled, bCScaled],
-          HctSolver.LINRGB_FROM_SCALED_DISCOUNT,
-      );
+      // use preallocated memory to avoid GC
+      const linrgb = this.arr2;
+      this.arr1[0] = rCScaled;
+      this.arr1[1] = gCScaled;
+      this.arr1[2] = bCScaled;
+      mathUtils.matrixMultiplyOut(this.arr1, HctSolver.LINRGB_FROM_SCALED_DISCOUNT, linrgb);
       // ===========================================================
       // Operations inlined from Cam16 to avoid repeated calculation
       // ===========================================================

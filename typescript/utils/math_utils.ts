@@ -143,3 +143,15 @@ export function matrixMultiply(row: number[], matrix: number[][]): number[] {
       row[0] * matrix[2][0] + row[1] * matrix[2][1] + row[2] * matrix[2][2];
   return [a, b, c];
 }
+
+export function matrixMultiplyOut(row: number[], matrix: number[][], out) {
+  const a =
+      row[0] * matrix[0][0] + row[1] * matrix[0][1] + row[2] * matrix[0][2];
+  const b =
+      row[0] * matrix[1][0] + row[1] * matrix[1][1] + row[2] * matrix[1][2];
+  const c =
+      row[0] * matrix[2][0] + row[1] * matrix[2][1] + row[2] * matrix[2][2];
+  out[0] = a;
+  out[1] = b;
+  out[2] = c;
+}

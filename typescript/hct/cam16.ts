@@ -86,6 +86,63 @@ export class Cam16 {
     return Cam16.fromIntInViewingConditions(argb, ViewingConditions.DEFAULT);
   }
 
+  static fromIntSetHueChroma(argb: number, out) {
+    Cam16.fromIntSetHueChromaViewingConditions(argb, out, ViewingConditions.DEFAULT);
+  }
+
+  static fromIntSetHueChromaViewingConditions(argb: number, out, viewingConditions: ViewingConditions) {
+    const red = (argb & 0x00ff0000) >> 16;
+    const green = (argb & 0x0000ff00) >> 8;
+    const blue = (argb & 0x000000ff);
+    const redL = utils.linearized(red);
+    const greenL = utils.linearized(green);
+    const blueL = utils.linearized(blue);
+    const x = 0.41233895 * redL + 0.35762064 * greenL + 0.18051042 * blueL;
+    const y = 0.2126 * redL + 0.7152 * greenL + 0.0722 * blueL;
+    const z = 0.01932141 * redL + 0.11916382 * greenL + 0.95034478 * blueL;
+
+    const rC = 0.401288 * x + 0.650173 * y - 0.051461 * z;
+    const gC = -0.250268 * x + 1.204414 * y + 0.045854 * z;
+    const bC = -0.002079 * x + 0.048952 * y + 0.953127 * z;
+
+    const rD = viewingConditions.rgbD[0] * rC;
+    const gD = viewingConditions.rgbD[1] * gC;
+    const bD = viewingConditions.rgbD[2] * bC;
+
+    const rAF = Math.pow((viewingConditions.fl * Math.abs(rD)) / 100.0, 0.42);
+    const gAF = Math.pow((viewingConditions.fl * Math.abs(gD)) / 100.0, 0.42);
+    const bAF = Math.pow((viewingConditions.fl * Math.abs(bD)) / 100.0, 0.42);
+
+    const rA = (math.signum(rD) * 400.0 * rAF) / (rAF + 27.13);
+    const gA = (math.signum(gD) * 400.0 * gAF) / (gAF + 27.13);
+    const bA = (math.signum(bD) * 400.0 * bAF) / (bAF + 27.13);
+
+    const a = (11.0 * rA + -12.0 * gA + bA) / 11.0;
+    const b = (rA + gA - 2.0 * bA) / 9.0;
+    const u = (20.0 * rA + 20.0 * gA + 21.0 * bA) / 20.0;
+    const p2 = (40.0 * rA + 20.0 * gA + bA) / 20.0;
+    const atan2 = Math.atan2(b, a);
+    const atanDegrees = (atan2 * 180.0) / Math.PI;
+    const hue = atanDegrees < 0 ? atanDegrees + 360.0 :
+        atanDegrees >= 360      ? atanDegrees - 360.0 :
+                                  atanDegrees;
+    const ac = p2 * viewingConditions.nbb;
+    const j = 100.0 *
+        Math.pow(
+            ac / viewingConditions.aw,
+            viewingConditions.c * viewingConditions.z);
+    const huePrime = hue < 20.14 ? hue + 360 : hue;
+    const eHue = 0.25 * (Math.cos((huePrime * Math.PI) / 180.0 + 2.0) + 3.8);
+    const p1 =
+        (50000.0 / 13.0) * eHue * viewingConditions.nc * viewingConditions.ncb;
+    const t = (p1 * Math.sqrt(a * a + b * b)) / (u + 0.305);
+    const alpha = Math.pow(t, 0.9) *
+        Math.pow(1.64 - Math.pow(0.29, viewingConditions.n), 0.73);
+    const c = alpha * Math.sqrt(j / 100.0);
+    out.internalHue = hue;
+    out.internalChroma = c;
+  }
+
   /**
    * @param argb ARGB representation of a color.
    * @param viewingConditions Information about the environment where the color
