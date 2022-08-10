@@ -18,6 +18,7 @@
 export * from './blend/blend';
 export * from './hct/cam16';
 export * from './hct/hct';
+export * from './hct/hct_solver';
 export * from './hct/viewing_conditions';
 export * from './palettes/core_palette';
 export * from './palettes/tonal_palette';
